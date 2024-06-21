@@ -1,0 +1,3 @@
+/Users/torjus/CLionProjects/libnet_test/cmake-build-debug/CMakeFiles/libnet_test.dir
+/Users/torjus/CLionProjects/libnet_test/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/torjus/CLionProjects/libnet_test/cmake-build-debug/CMakeFiles/rebuild_cache.dir
