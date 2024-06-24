@@ -3,4 +3,9 @@ project(libnet_test C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(libnet_test main.c)
+link_directories(
+    /usr/lib/x86_64-linux-gnu/libmnl.so
+    /usr/lib/x86_64-linux-gnu/libnetfilter_queue.so
+)
+
+add_executable(libnet_test nf-queue.c)
