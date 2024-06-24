@@ -1,4 +1,4 @@
-#include <errno.h>
+ #include <errno.h>
  #include <stdio.h>
  #include <stdlib.h>
  #include <unistd.h>
@@ -21,15 +21,15 @@
  static struct mnl_socket *nl;
  
  static void
- nfq_send_verdict(int queue_num, uint32_t id)
+ nfq_send_verdict(int queue_num, uint32_t id, int verdict)
  {
          char buf[MNL_SOCKET_BUFFER_SIZE];
          struct nlmsghdr *nlh;
          struct nlattr *nest;
  
          nlh = nfq_nlmsg_put(buf, NFQNL_MSG_VERDICT, queue_num);
+
          nfq_nlmsg_verdict_put(nlh, id, NF_ACCEPT);
- 
          /* example to set the connmark. First, start NFQA_CT section: */
          nest = mnl_attr_nest_start(nlh, NFQA_CT);
  
@@ -96,8 +96,34 @@
          if (skbinfo & NFQA_SKB_CSUMNOTREADY)
                  printf(", checksum not ready");
          puts(")");
+
+         /* if (id % 2 == 0) {
+                nfq_send_verdict(ntohs(nfg->res_id), id, NF_DROP);
+         } */
+
+        struct timespec delay;
+        delay.tv_sec = 2;
+        delay.tv_nsec = 0;
+
+        // Print timestamp before delay
+        struct timespec start_time;
+        clock_gettime(CLOCK_MONOTONIC, &start_time);
+        printf("Before delay: %ld seconds\n", start_time.tv_sec);
+
+        // Introduce delay (latency)
+        if (nanosleep(&delay, NULL) != 0) {
+                perror("nanosleep");
+                // Handle error if needed
+                }
+
+        // Print timestamp after delay
+        struct timespec end_time;
+        clock_gettime(CLOCK_MONOTONIC, &end_time);
+        printf("After delay: %ld seconds\n", end_time.tv_sec);
+
+         nfq_send_verdict(ntohs(nfg->res_id), id, NF_ACCEPT);
+
  
-         nfq_send_verdict(ntohs(nfg->res_id), id);
  
          return MNL_CB_OK;
  }
