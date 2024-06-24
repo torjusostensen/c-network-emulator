@@ -101,9 +101,20 @@
                 nfq_send_verdict(ntohs(nfg->res_id), id, NF_DROP);
          } */
 
-        struct timespec delay;
-        delay.tv_sec = 2;
-        delay.tv_nsec = 0;
+        // initialize time to zero
+        struct timespec delay = {0};
+        
+        // want to delay a random value between 1 and 5 seconds
+        int list_delay[] = {1, 2, 3, 4, 5};
+        int index_random = rand() % sizeof(list_delay) / sizeof(list_delay[0]);
+
+        delay.tv_sec = list_delay[index_random];
+        printf("Delay: %ld seconds\n", delay.tv_sec);
+
+        
+
+        // delay.tv_sec = 2;
+        // delay.tv_nsec = 0;
 
         // Print timestamp before delay
         struct timespec start_time;
