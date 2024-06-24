@@ -9,3 +9,12 @@ link_directories(
 )
 
 add_executable(libnet_test nf-queue.c)
+
+# Specify the required libraries
+find_library(NETFILTER_QUEUE_LIB netfilter_queue)
+if(NETFILTER_QUEUE_LIB)
+# Link the target "libnet_test" with the libnetfilter_queue library found
+target_link_libraries(libnet_test ${NETFILTER_QUEUE_LIB})
+else()
+message(FATAL_ERROR "libnetfilter_queue not found")
+endif()
