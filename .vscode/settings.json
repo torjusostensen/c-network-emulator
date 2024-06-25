@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "nfnetlink_queue.h": "c",
-        "nfnetlink.h": "c"
+        "nfnetlink.h": "c",
+        "stdio.h": "c"
     }
 }
