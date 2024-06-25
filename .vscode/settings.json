@@ -2,6 +2,9 @@
     "files.associations": {
         "nfnetlink_queue.h": "c",
         "nfnetlink.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "libnetfilter_queue.h": "c",
+        "string.h": "c",
+        "nfnetlink_conntrack.h": "c"
     }
 }

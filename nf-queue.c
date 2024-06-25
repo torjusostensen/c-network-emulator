@@ -1,10 +1,12 @@
+
+
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <time.h>
 #include <arpa/inet.h>
+#include <math.h>
 
 #include <libmnl/libmnl.h>
 #include <linux/netfilter.h>
@@ -18,65 +20,6 @@
 /* only for NFQA_CT, not needed otherwise: */
 #include <linux/netfilter/nfnetlink_conntrack.h>
 #include "functions.c"
-
-
-static struct mnl_socket *nl;
-
-static void apply_delay_packet() {
-        struct timespec delay, start_time, end_time;
-        int list_delay_values[] = {1, 2, 3, 4, 5}; // values in seconds
-        int index_random = rand() % (sizeof(list_delay_values) / sizeof(list_delay_values[0]));
-        delay.tv_sec = list_delay_values[index_random];
-        delay.tv_nsec = 0;
-
-        printf("Delay: %ld seconds.\n", delay.tv_sec);
-
-        // Print the timestamp before the delay
-        if (clock_gettime(CLOCK_MONOTONIC, &start_time) == -1) {
-                perror("clock_gettime");
-                return;
-        }
-        printf("Before delay: %ld seconds\n", start_time.tv_sec);
-
-        // Add the latency
-        if (nanosleep(&delay, NULL) != 0) {
-                perror("nanosleep");
-        }
-
-        // Print the timestamp after the delay
-        if (clock_gettime(CLOCK_MONOTONIC, &end_time) == -1) {
-                perror("clock_gettime");
-                return;
-        }
-        printf("After delay: %ld seconds\n", end_time.tv_sec);
-}
-
-static void nfq_send_verdict(int queue_num, uint32_t id, int verdict)
-{
-
-        char buf[MNL_SOCKET_BUFFER_SIZE];
-        struct nlmsghdr *nlh;
-        struct nlattr *nest;
-
-        nlh = nfq_nlmsg_put(buf, NFQNL_MSG_VERDICT, queue_num);
-
-        nfq_nlmsg_verdict_put(nlh, id, NF_ACCEPT);
-        /* example to set the connmark. First, start NFQA_CT section: */
-        nest = mnl_attr_nest_start(nlh, NFQA_CT);
-
-        /* then, add the connmark attribute: */
-        mnl_attr_put_u32(nlh, CTA_MARK, htonl(42));
-        /* more conntrack attributes, e.g. CTA_LABELS could be set here */
-
-        /* end conntrack section */
-        mnl_attr_nest_end(nlh, nest);
-
-        if (mnl_socket_sendto(nl, nlh, nlh->nlmsg_len) < 0)
-        {
-                perror("mnl_socket_send");
-                exit(EXIT_FAILURE);
-        }
-}
 
 static int queue_cb(const struct nlmsghdr *nlh, void *data)
 {
