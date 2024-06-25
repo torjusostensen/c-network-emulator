@@ -1,8 +1,0 @@
-[
-{
-  "directory": "/home/domos/Desktop/c_repo/libnet_test/build",
-  "command": "/usr/bin/cc   -g -std=gnu11 -o CMakeFiles/libnet_test.dir/nf-queue.c.o -c /home/domos/Desktop/c_repo/libnet_test/nf-queue.c",
-  "file": "/home/domos/Desktop/c_repo/libnet_test/nf-queue.c",
-  "output": "CMakeFiles/libnet_test.dir/nf-queue.c.o"
-}
-]

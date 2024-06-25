@@ -26,7 +26,7 @@
 static struct mnl_socket *nl;
 
 // Implementation using Box-Muller transformation
-double gaussion_distribution(double mean, double stddev) {
+double gaussian_distribution(double mean, double stddev) {
     static int have_spare = 0;
     static double spare;
 
@@ -48,12 +48,15 @@ double gaussion_distribution(double mean, double stddev) {
     s = sqrt(-2.0 * log(s) / s);
     spare = v * s;
     return mean + stddev * u * s;
-
 }
 
 bool drop_packet_parameter(uint32_t id) {
-        // Input is packet ID, type of parameter to drop packet is flexible.
-        return id % 2 != 0;
+        double drop_probability = gaussian_distribution(0.5, 0.2);
+        if (drop_probability > 0.5) {
+            return true;
+        } else {
+            return false;
+        }
 }
 
 void apply_delay_packet() {
@@ -61,7 +64,7 @@ void apply_delay_packet() {
     /* int list_delay[] = {1, 2, 3, 4, 5};
     int index_random = rand() % (sizeof(list_delay) / sizeof(list_delay[0]));
     delay.tv_sec = list_delay[index_random]; */
-    delay.tv_sec = gaussion_distribution(3, 0.5);
+    delay.tv_sec = gaussian_distribution(3, 0.5);
     delay.tv_nsec = 0;
     
     printf("Intended delay: %ld seconds\n", delay.tv_sec);
