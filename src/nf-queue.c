@@ -22,20 +22,6 @@
 #include <linux/netfilter/nfnetlink_conntrack.h>
 #include "nf-functions.c"
 
-struct twamp_test_packet {
-        uint32_t sequence_number;
-        uint64_t timestamp;
-        uint16_t error_estimate;
-        uint16_t mbz1;
-        uint64_t receive_timestamp;
-        uint32_t sender_sequence_number;
-        uint64_t sender_timestamp;
-        uint16_t sender_error_estimate;
-        uint16_t mbz2;
-        uint8_t sender_ttl;
-        uint8_t pad[7];
-};
-
 static struct mnl_socket *nl;
 
 static int queue_cb(const struct nlmsghdr *nlh, void *data) {
@@ -64,7 +50,7 @@ static int queue_cb(const struct nlmsghdr *nlh, void *data) {
         skbinfo = attr[NFQA_SKB_INFO] ? ntohl(mnl_attr_get_u32(attr[NFQA_SKB_INFO])) : 0;
 
         id = ntohl(ph->packet_id);
-        printf("packet received (id=%u hw=0x%04x hook=%u, payload len %u)", id, ntohs(ph->hw_protocol), ph->hook, plen);
+        printf("packet received (id=%u hw=0x%04x hook=%u, payload len %u)\n", id, ntohs(ph->hw_protocol), ph->hook, plen);
 
         // debugging code to check packet
         struct iphdr *ip_header = payload;
