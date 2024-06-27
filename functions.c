@@ -1,5 +1,5 @@
 #ifndef _POSIX_C_SOURCE
-#define _POSIX_C_SOURCE 200809L
+
 #endif
 #include <errno.h>
 #include <stdio.h>
@@ -64,7 +64,7 @@ void apply_delay_packet() {
     /* int list_delay[] = {1, 2, 3, 4, 5};
     int index_random = rand() % (sizeof(list_delay) / sizeof(list_delay[0]));
     delay.tv_sec = list_delay[index_random]; */
-    delay.tv_sec = gaussian_distribution(3, 0.5);
+    delay.tv_sec = 1; // gaussian_distribution(3, 0.5);
     delay.tv_nsec = 0;
     
     printf("Intended delay: %ld seconds\n", delay.tv_sec);
@@ -95,26 +95,26 @@ void apply_delay_packet() {
 
 void nfq_send_verdict(int queue_num, uint32_t id, int verdict) {
 
-        char buf[MNL_SOCKET_BUFFER_SIZE];
-        struct nlmsghdr *nlh;
-        struct nlattr *nest;
+    char buf[MNL_SOCKET_BUFFER_SIZE];
+    struct nlmsghdr *nlh;
+    struct nlattr *nest;
 
-        nlh = nfq_nlmsg_put(buf, NFQNL_MSG_VERDICT, queue_num);
+    nlh = nfq_nlmsg_put(buf, NFQNL_MSG_VERDICT, queue_num);
 
-        nfq_nlmsg_verdict_put(nlh, id, NF_ACCEPT);
-        /* example to set the connmark. First, start NFQA_CT section: */
-        nest = mnl_attr_nest_start(nlh, NFQA_CT);
+    nfq_nlmsg_verdict_put(nlh, id, NF_ACCEPT);
+    // example to set the connmark. First, start NFQA_CT section:
+    nest = mnl_attr_nest_start(nlh, NFQA_CT);
 
-        /* then, add the connmark attribute: */
-        mnl_attr_put_u32(nlh, CTA_MARK, htonl(42));
-        /* more conntrack attributes, e.g. CTA_LABELS could be set here */
+    // then, add the connmark attribute:
+    mnl_attr_put_u32(nlh, CTA_MARK, htonl(42));
+    // more conntrack attributes, e.g. CTA_LABELS could be set here
 
-        /* end conntrack section */
-        mnl_attr_nest_end(nlh, nest);
+    // end conntrack section
+    mnl_attr_nest_end(nlh, nest);
 
-        if (mnl_socket_sendto(nl, nlh, nlh->nlmsg_len) < 0)
-        {
-                perror("mnl_socket_send");
-                exit(EXIT_FAILURE);
-        }
+    if (mnl_socket_sendto(nl, nlh, nlh->nlmsg_len) < 0)
+    {
+        perror("mnl_socket_send");
+        exit(EXIT_FAILURE);
+    }
 }
