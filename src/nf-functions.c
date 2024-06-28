@@ -1,5 +1,4 @@
 #ifndef _POSIX_C_SOURCE
-
 #endif
 #include <errno.h>
 #include <stdio.h>
@@ -9,16 +8,12 @@
 #include <time.h>
 #include <arpa/inet.h>
 #include <math.h>
-
 #include <libmnl/libmnl.h>
 #include <linux/netfilter.h>
 #include <linux/netfilter/nfnetlink.h>
-
 #include <linux/types.h>
 #include <linux/netfilter/nfnetlink_queue.h>
-
 #include <libnetfilter_queue/libnetfilter_queue.h>
-
 /* only for NFQA_CT, not needed otherwise: */
 #include <linux/netfilter/nfnetlink_conntrack.h>
 
@@ -50,21 +45,18 @@ double gaussian_distribution(double mean, double stddev) {
     return mean + stddev * u * s;
 }
 
-// TODO: Find a better implementation of drop_packet_parameter.
-bool drop_packet_parameter(uint32_t id) {
-        double drop_probability = gaussian_distribution(3, 0.5);
-        /*if (drop_probability > 0.5) {
-            return true;
-        } else {
-            return false;
-        } */
-        return true;
+// Boolean which returns true if packet should be dropped.
+bool should_drop_packet(uint32_t id) {
+    double mean = 3.0;
+    double stddev = 0.5;
+    double drop_probability = gaussian_distribution(mean, stddev);
+    return drop_probability > 0.5;
 }
 
 // Apply delay to packet processing, NB: for each single packet.
 void apply_delay_packet() {
     struct timespec delay, start_time, end_time;
-    /* Implementation using a list of predefined values.
+    /* Implementation using a list of predefined values:
     int list_delay[] = {1, 2, 3, 4, 5};
     int index_random = rand() % (sizeof(list_delay) / sizeof(list_delay[0]));
     delay.tv_sec = list_delay[index_random]; */
@@ -105,18 +97,19 @@ void nfq_send_verdict(int queue_num, uint32_t id, int verdict) {
     char buf[MNL_SOCKET_BUFFER_SIZE];
     struct nlmsghdr *nlh;
     struct nlattr *nest;
+    int verdict;
 
     // Prepare netlink message header
     nlh = nfq_nlmsg_put(buf, NFQNL_MSG_VERDICT, queue_num);
 
     // Set the verdig of the packet.
-    nfq_nlmsg_verdict_put(nlh, id, NF_DROP);
+    nfq_nlmsg_verdict_put(nlh, id, verdict);
+
     // example to set the connmark. First, start NFQA_CT section:
     nest = mnl_attr_nest_start(nlh, NFQA_CT);
 
     // then, add the connmark attribute:
     mnl_attr_put_u32(nlh, CTA_MARK, htonl(42));
-    // more conntrack attributes, e.g. CTA_LABELS could be set here
 
     // end conntrack section
     mnl_attr_nest_end(nlh, nest);

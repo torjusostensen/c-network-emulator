@@ -53,9 +53,6 @@ static int queue_cb(const struct nlmsghdr *nlh, void *data) {
         skbinfo = attr[NFQA_SKB_INFO] ? ntohl(mnl_attr_get_u32(attr[NFQA_SKB_INFO])) : 0;
         id = ntohl(ph->packet_id);
 
-        // Debug print to check that packet is received.
-        printf("packet received (id=%u hw=0x%04x hook=%u, payload len %u)\n", id, ntohs(ph->hw_protocol), ph->hook, plen);
-
         // Cast the payload to an IP header structure
         struct iphdr *ip_header = payload;
 
@@ -65,6 +62,9 @@ static int queue_cb(const struct nlmsghdr *nlh, void *data) {
         inet_ntop(AF_INET, &(ip_header->saddr), src_ip, INET_ADDRSTRLEN);
         inet_ntop(AF_INET, &(ip_header->daddr), dst_ip, INET_ADDRSTRLEN);
 
+        // Debug print to check that packet is received.
+        printf("Packet received (id=%u hw=0x%04x hook=%u, payload len %u)\n", id, ntohs(ph->hw_protocol), ph->hook, plen);
+
         printf("Packet: src IP = %s, dst IP = %s, protocol = %u\n", 
                 src_ip, dst_ip, ip_header->protocol);
 
@@ -73,13 +73,8 @@ static int queue_cb(const struct nlmsghdr *nlh, void *data) {
                 struct udphdr *udp_header = (struct udphdr *)((char *)ip_header + (ip_header->ihl * 4));
                 uint16_t src_port = ntohs(udp_header->source);
                 uint16_t dst_port = ntohs(udp_header->dest);
-                
-                printf("UDP: src port = %u, dst port = %u\n", src_port, dst_port);
 
-                // Set port to the twamp-server used in implementation.
-                if (src_port == 4200 || dst_port == 4200) {
-                printf("Potential TWAMP packet detected\n");
-                }
+                printf("UDP: src port = %u, dst port = %u\n", src_port, dst_port);
         }
 
         // Check if the captured length attribute is present.
@@ -101,15 +96,14 @@ static int queue_cb(const struct nlmsghdr *nlh, void *data) {
                 printf(", checksum not ready");
         puts("");
 
-        // BEGIN: The manipulation of the packet stream.
-        if (drop_packet_parameter(id)) {
-                // apply_delay_packet();
-                nfq_send_verdict(ntohs(nfg -> res_id), id, NF_ACCEPT);
-        } else {
-                printf("Dropping packet with id: %u\n", id);
+        // BEGIN: Manipulation of packet stream
+        if (should_drop_packet(id)) {
                 nfq_send_verdict(ntohs(nfg -> res_id), id, NF_DROP);
+        } else {
+                apply_delay_packet();
+                nfq_send_verdict(ntohs(nfg -> res_id), id, NF_ACCEPT);
         }
-        // END: The manipulation of the packet stream.
+        // END: Manipulation of packet stream
 
         return MNL_CB_OK;
 }
