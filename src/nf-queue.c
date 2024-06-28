@@ -24,6 +24,7 @@
 
 static struct mnl_socket *nl;
 
+// Callback function for processing of each packet.
 static int queue_cb(const struct nlmsghdr *nlh, void *data) {
         struct nfqnl_msg_packet_hdr *ph = NULL;
         struct nlattr *attr[NFQA_MAX + 1] = {};
@@ -31,6 +32,7 @@ static int queue_cb(const struct nlmsghdr *nlh, void *data) {
         struct nfgenmsg *nfg;
         uint16_t plen;
 
+        // Parse the netlink message.
         if (nfq_nlmsg_parse(nlh, attr) < 0) {
                 perror("problems parsing");
                 return MNL_CB_ERROR;
@@ -38,21 +40,23 @@ static int queue_cb(const struct nlmsghdr *nlh, void *data) {
 
         nfg = mnl_nlmsg_get_payload(nlh);
 
+        // Checks if the packet has a header present.
         if (attr[NFQA_PACKET_HDR] == NULL) {
                 fputs("metaheader not set\n", stderr);
                 return MNL_CB_ERROR;
         }
 
+        // Extract the packet information: Header, payload and other information.
         ph = mnl_attr_get_payload(attr[NFQA_PACKET_HDR]);
         plen = mnl_attr_get_payload_len(attr[NFQA_PAYLOAD]);
-
         void *payload = mnl_attr_get_payload(attr[NFQA_PAYLOAD]);
         skbinfo = attr[NFQA_SKB_INFO] ? ntohl(mnl_attr_get_u32(attr[NFQA_SKB_INFO])) : 0;
-
         id = ntohl(ph->packet_id);
+
+        // Debug print to check that packet is received.
         printf("packet received (id=%u hw=0x%04x hook=%u, payload len %u)\n", id, ntohs(ph->hw_protocol), ph->hook, plen);
 
-        // debugging code to check packet
+        // Cast the payload to an IP header structure
         struct iphdr *ip_header = payload;
 
         // Convert IP addresses to strings
@@ -64,7 +68,7 @@ static int queue_cb(const struct nlmsghdr *nlh, void *data) {
         printf("Packet: src IP = %s, dst IP = %s, protocol = %u\n", 
                 src_ip, dst_ip, ip_header->protocol);
 
-        // Only interested in UDP, twamp uses it.
+        // Checks if package is UDP, not interested in other packets (twamp uses UDP).
         if (ip_header->protocol == IPPROTO_UDP) {
                 struct udphdr *udp_header = (struct udphdr *)((char *)ip_header + (ip_header->ihl * 4));
                 uint16_t src_port = ntohs(udp_header->source);
@@ -72,38 +76,40 @@ static int queue_cb(const struct nlmsghdr *nlh, void *data) {
                 
                 printf("UDP: src port = %u, dst port = %u\n", src_port, dst_port);
 
-                // Default port 4000 because of twamp servers.
-                if (src_port == 4000 || dst_port == 4000) {
+                // Set port to the twamp-server used in implementation.
+                if (src_port == 4200 || dst_port == 4200) {
                 printf("Potential TWAMP packet detected\n");
                 }
         }
 
+        // Check if the captured length attribute is present.
         if (attr[NFQA_CAP_LEN]) {
+                // Retrieve the originial packet length before any truncation, and print "truncated" if it differs.
                 uint32_t orig_len = ntohl(mnl_attr_get_u32(attr[NFQA_CAP_LEN]));
                 if (orig_len != plen) {
                         printf("truncated ");
                 }
         }
 
+        // GSO = Generic Segmentation Offload
         if (skbinfo & NFQA_SKB_GSO) {
                 printf("GSO ");
         }
 
-        id = ntohl(ph -> packet_id);
-        printf("packet received (id=%u hw=0x%04x hook=%u, payload len %u",
-                id, ntohs(ph->hw_protocol), ph->hook, plen);
-
+        // Check if checksum is ready.
         if (skbinfo & NFQA_SKB_CSUMNOTREADY)
                 printf(", checksum not ready");
         puts("");
 
+        // BEGIN: The manipulation of the packet stream.
         if (drop_packet_parameter(id)) {
-                apply_delay_packet();
+                // apply_delay_packet();
                 nfq_send_verdict(ntohs(nfg -> res_id), id, NF_ACCEPT);
         } else {
                 printf("Dropping packet with id: %u\n", id);
                 nfq_send_verdict(ntohs(nfg -> res_id), id, NF_DROP);
         }
+        // END: The manipulation of the packet stream.
 
         return MNL_CB_OK;
 }
