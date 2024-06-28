@@ -50,7 +50,7 @@ bool should_drop_packet(uint32_t id) {
     double mean = 3.0;
     double stddev = 0.5;
     double drop_probability = gaussian_distribution(mean, stddev);
-    return drop_probability > 0.5;
+    return false; //drop_probability > 0.5;
 }
 
 // Apply delay to packet processing, NB: for each single packet.
@@ -97,7 +97,7 @@ void nfq_send_verdict(int queue_num, uint32_t id, int verdict) {
     char buf[MNL_SOCKET_BUFFER_SIZE];
     struct nlmsghdr *nlh;
     struct nlattr *nest;
-    int verdict;
+    verdict;
 
     // Prepare netlink message header
     nlh = nfq_nlmsg_put(buf, NFQNL_MSG_VERDICT, queue_num);

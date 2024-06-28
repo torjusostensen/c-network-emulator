@@ -23,6 +23,7 @@
 #include "nf-functions.c"
 
 static struct mnl_socket *nl;
+static FILE *fp;
 
 // Callback function for processing of each packet.
 static int queue_cb(const struct nlmsghdr *nlh, void *data) {
@@ -48,13 +49,15 @@ static int queue_cb(const struct nlmsghdr *nlh, void *data) {
 
         // Extract the packet information: Header, payload and other information.
         ph = mnl_attr_get_payload(attr[NFQA_PACKET_HDR]);
-        plen = mnl_attr_get_payload_len(attr[NFQA_PAYLOAD]);
         void *payload = mnl_attr_get_payload(attr[NFQA_PAYLOAD]);
+        plen = mnl_attr_get_payload_len(attr[NFQA_PAYLOAD]);
         skbinfo = attr[NFQA_SKB_INFO] ? ntohl(mnl_attr_get_u32(attr[NFQA_SKB_INFO])) : 0;
         id = ntohl(ph->packet_id);
 
         // Cast the payload to an IP header structure
         struct iphdr *ip_header = payload;
+        struct udphdr *udp_header = (struct udphdr *)((char *)ip_header + (ip_header->ihl * 4));
+
 
         // Convert IP addresses to strings
         char src_ip[INET_ADDRSTRLEN];
@@ -70,7 +73,7 @@ static int queue_cb(const struct nlmsghdr *nlh, void *data) {
 
         // Checks if package is UDP, not interested in other packets (twamp uses UDP).
         if (ip_header->protocol == IPPROTO_UDP) {
-                struct udphdr *udp_header = (struct udphdr *)((char *)ip_header + (ip_header->ihl * 4));
+                // struct udphdr *udp_header = (struct udphdr *)((char *)ip_header + (ip_header->ihl * 4));
                 uint16_t src_port = ntohs(udp_header->source);
                 uint16_t dst_port = ntohs(udp_header->dest);
 
@@ -97,11 +100,15 @@ static int queue_cb(const struct nlmsghdr *nlh, void *data) {
         puts("");
 
         // BEGIN: Manipulation of packet stream
-        if (should_drop_packet(id)) {
+        int should_drop = should_drop_packet(id);
+        if (should_drop) {
                 nfq_send_verdict(ntohs(nfg -> res_id), id, NF_DROP);
+                fprintf(fp, "%u, %s, %s, %u, %u, %u, %s\n", id, src_ip, dst_ip, ip_header->protocol, ntohs(udp_header->source), ntohs(udp_header->dest), "dropped");
         } else {
                 apply_delay_packet();
                 nfq_send_verdict(ntohs(nfg -> res_id), id, NF_ACCEPT);
+                fprintf(fp, "%u, %s, %s, %u, %u, %u, %s\n", id, src_ip, dst_ip, ip_header->protocol, ntohs(udp_header->source), ntohs(udp_header->dest), "accepted");
+
         }
         // END: Manipulation of packet stream
 
@@ -110,6 +117,8 @@ static int queue_cb(const struct nlmsghdr *nlh, void *data) {
 
 int main(int argc, char *argv[]) {
 
+        fp = fopen("packet_log2.csv", "w");
+        fprintf(fp, "hello");
         char *buf;
         /* largest possible packet payload, plus netlink data overhead: */
         size_t sizeof_buf = 0xffff + (MNL_SOCKET_BUFFER_SIZE / 2);
@@ -141,6 +150,16 @@ int main(int argc, char *argv[]) {
                 perror("allocate receive buffer");
                 exit(EXIT_FAILURE);
         }
+
+        /*fp = fopen("packet_log.csv", "w");
+        if (fp == NULL) {
+                perror("Error opening file");
+                exit(EXIT_FAILURE);
+        }*
+
+        // write header for csv file
+        fprintf(fp, "ID, Source ip, Dest IP, Protocol, Source Port, Dest Port, Verdict\n");
+        fprintf(fp, "hello");*/
 
         nlh = nfq_nlmsg_put(buf, NFQNL_MSG_CONFIG, queue_num);
         nfq_nlmsg_cfg_put_cmd(nlh, AF_INET, NFQNL_CFG_CMD_BIND);
