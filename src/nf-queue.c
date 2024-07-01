@@ -73,7 +73,6 @@ static int queue_cb(const struct nlmsghdr *nlh, void *data) {
 
         // Checks if package is UDP, not interested in other packets (twamp uses UDP).
         if (ip_header->protocol == IPPROTO_UDP) {
-                // struct udphdr *udp_header = (struct udphdr *)((char *)ip_header + (ip_header->ihl * 4));
                 uint16_t src_port = ntohs(udp_header->source);
                 uint16_t dst_port = ntohs(udp_header->dest);
 
@@ -103,22 +102,21 @@ static int queue_cb(const struct nlmsghdr *nlh, void *data) {
         int should_drop = should_drop_packet(id);
         if (should_drop) {
                 nfq_send_verdict(ntohs(nfg -> res_id), id, NF_DROP);
-                fprintf(fp, "%u, %s, %s, %u, %u, %u, %s\n", id, src_ip, dst_ip, ip_header->protocol, ntohs(udp_header->source), ntohs(udp_header->dest), "dropped");
+                fprintf(fp, "%u, %s, %s, %u, %u, %u, %s, %.3f\n", id, src_ip, dst_ip, ip_header->protocol, ntohs(udp_header->source), ntohs(udp_header->dest), "dropped", apply_delay_packet());
+                fflush(fp);
         } else {
                 apply_delay_packet();
                 nfq_send_verdict(ntohs(nfg -> res_id), id, NF_ACCEPT);
-                fprintf(fp, "%u, %s, %s, %u, %u, %u, %s\n", id, src_ip, dst_ip, ip_header->protocol, ntohs(udp_header->source), ntohs(udp_header->dest), "accepted");
+                fprintf(fp, "%u, %s, %s, %u, %u, %u, %s, %.3f\n", id, src_ip, dst_ip, ip_header->protocol, ntohs(udp_header->source), ntohs(udp_header->dest), "accepted", apply_delay_packet());
+                fflush(fp);
 
         }
         // END: Manipulation of packet stream
-
         return MNL_CB_OK;
 }
 
 int main(int argc, char *argv[]) {
-
-        fp = fopen("packet_log2.csv", "w");
-        fprintf(fp, "hello");
+        srand((unsigned int) time(NULL));
         char *buf;
         /* largest possible packet payload, plus netlink data overhead: */
         size_t sizeof_buf = 0xffff + (MNL_SOCKET_BUFFER_SIZE / 2);
@@ -151,15 +149,15 @@ int main(int argc, char *argv[]) {
                 exit(EXIT_FAILURE);
         }
 
-        /*fp = fopen("packet_log.csv", "w");
+        fp = fopen("packet_log.csv", "w");
         if (fp == NULL) {
                 perror("Error opening file");
                 exit(EXIT_FAILURE);
-        }*
+        }
 
         // write header for csv file
-        fprintf(fp, "ID, Source ip, Dest IP, Protocol, Source Port, Dest Port, Verdict\n");
-        fprintf(fp, "hello");*/
+        fprintf(fp, "ID,Source ip,Dest IP,Protocol,Source Port,Dest Port,Verdict,Delay\n");
+        fflush(fp);
 
         nlh = nfq_nlmsg_put(buf, NFQNL_MSG_CONFIG, queue_num);
         nfq_nlmsg_cfg_put_cmd(nlh, AF_INET, NFQNL_CFG_CMD_BIND);
@@ -204,6 +202,7 @@ int main(int argc, char *argv[]) {
         }
 
         mnl_socket_close(nl);
+        fclose(fp);
 
         return 0;
 }

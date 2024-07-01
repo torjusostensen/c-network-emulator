@@ -36,7 +36,7 @@ double gaussian_distribution(double mean, double stddev) {
     // do-while to avoid division by zero
     do {
         u = (rand() / (double)RAND_MAX) * 2.0 - 1.0;
-        u = (rand() / (double)RAND_MAX) * 2.0 - 1.0;
+        v = (rand() / (double)RAND_MAX) * 2.0 - 1.0;
         s = u * u + v * v;
     } while (s >= 1.0 || s == 0.0);
 
@@ -54,7 +54,7 @@ bool should_drop_packet(uint32_t id) {
 }
 
 // Apply delay to packet processing, NB: for each single packet.
-void apply_delay_packet() {
+double apply_delay_packet() {
     struct timespec delay, start_time, end_time;
     /* Implementation using a list of predefined values:
     int list_delay[] = {1, 2, 3, 4, 5};
@@ -62,15 +62,16 @@ void apply_delay_packet() {
     delay.tv_sec = list_delay[index_random]; */
 
     delay.tv_sec = 0; // gaussian_distribution(3, 0.5);
-    delay.tv_nsec = 0;
+    delay.tv_nsec = gaussian_distribution(500, 50) * pow(10, 6);
+    long int milliseconds_delay = delay.tv_nsec / pow (10,6);
 
     // The intended delay
-    printf("Intended delay: %ld seconds\n", delay.tv_sec);
+    printf("Intended delay: %ld seconds and %ld milliseconds\n", delay.tv_sec, milliseconds_delay);
 
     // Get start time
     if (clock_gettime(CLOCK_MONOTONIC, &start_time) == -1) {
         perror("clock_gettime");
-        return;
+        return 0;
     }
 
     // Introduce delay (latency)
@@ -82,13 +83,14 @@ void apply_delay_packet() {
     // Get end time
     if (clock_gettime(CLOCK_MONOTONIC, &end_time) == -1) {
         perror("clock_gettime");
-        return;
+        return 0;
     }
 
     // Calculate actual delay
     double elapsed = (end_time.tv_sec - start_time.tv_sec) + (end_time.tv_nsec - start_time.tv_nsec) / 1e9;
 
-    printf("Actual delay: %.6f seconds\n", elapsed);
+    printf("Actual delay: %.3f seconds\n", elapsed);
+    return elapsed;
 }
 
 // The function which sends the verdict (accept, drop) back to netfilter.
