@@ -124,25 +124,29 @@ int main(int argc, char *argv[]) {
         int ret;
         unsigned int portid, queue_num;
 
+        // Check that main loop is entered and correct number of arguments
         printf("Main loop entered: \n");
         if (argc != 2) {
                 printf("Usage: %s [queue_num]\n", argv[0]);
                 exit(EXIT_FAILURE);
         }
-        queue_num = atoi(argv[1]);
+        queue_num = atoi(argv[1]); // Set queue number equal to the input from command line interface
 
+        // Open netlink socket
         nl = mnl_socket_open(NETLINK_NETFILTER);
         if (nl == NULL) {
                 perror("mnl_socket_open");
                 exit(EXIT_FAILURE);
         }
 
+        // Bind soccket to netfilter protocol
         if (mnl_socket_bind(nl, 0, MNL_SOCKET_AUTOPID) < 0) {
                 perror("mnl_socket_bind");
                 exit(EXIT_FAILURE);
         }
-        portid = mnl_socket_get_portid(nl);
+        portid = mnl_socket_get_portid(nl); // Get the port id
 
+        // Allocate memory for the buffer
         buf = malloc(sizeof_buf);
         if (!buf) {
                 perror("allocate receive buffer");
@@ -159,14 +163,17 @@ int main(int argc, char *argv[]) {
         fprintf(fp, "ID,Source ip,Dest IP,Protocol,Source Port,Dest Port,Verdict,Delay\n");
         fflush(fp);
 
+        // Prepare a netlink message to configure the queue
         nlh = nfq_nlmsg_put(buf, NFQNL_MSG_CONFIG, queue_num);
         nfq_nlmsg_cfg_put_cmd(nlh, AF_INET, NFQNL_CFG_CMD_BIND);
 
+        // Send the netlink message to bind the queue
         if (mnl_socket_sendto(nl, nlh, nlh->nlmsg_len) < 0) {
                 perror("mnl_socket_send");
                 exit(EXIT_FAILURE);
         }
 
+        // Prepare a netlink message to set packet copy mode
         nlh = nfq_nlmsg_put(buf, NFQNL_MSG_CONFIG, queue_num);
         nfq_nlmsg_cfg_put_params(nlh, NFQNL_COPY_PACKET, 0xffff);
 
@@ -186,6 +193,7 @@ int main(int argc, char *argv[]) {
         mnl_socket_setsockopt(nl, NETLINK_NO_ENOBUFS, &ret, sizeof(int));
 
         for (;;) {
+                // Receive packets from the netlink socket
                 ret = mnl_socket_recvfrom(nl, buf, sizeof_buf);
                 if (ret == -1)
                 {
@@ -193,6 +201,7 @@ int main(int argc, char *argv[]) {
                         exit(EXIT_FAILURE);
                 }
 
+                // Process the received packets using the callback function
                 ret = mnl_cb_run(buf, ret, 0, portid, queue_cb, NULL);
                 if (ret < 0)
                 {
@@ -200,7 +209,7 @@ int main(int argc, char *argv[]) {
                         exit(EXIT_FAILURE);
                 }
         }
-
+        // Close the netlink socket and the file
         mnl_socket_close(nl);
         fclose(fp);
 
