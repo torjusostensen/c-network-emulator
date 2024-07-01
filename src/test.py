@@ -3,33 +3,41 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import norm
 
+# Read the data
 df = pd.read_csv("src/packet_log.csv")
 df.columns = df.columns.str.strip()
 
-print(df["Delay"].mean())
+# Create the plot with two y-axes
+fig, ax1 = plt.subplots(figsize=(12, 6))
+ax2 = ax1.twinx()
 
-plt.figure(figsize=(10,6))
-n, bins, patches = plt.hist(df["Delay"], bins = 10, density=True, edgecolor ="k", alpha=0.8, label="Actual data")
+# Plot the histogram of actual data on the first y-axis
+n, bins, patches = ax1.hist(df["Delay"], bins=10, edgecolor="k", alpha=0.8, label='Actual Data', color='b')
+ax1.set_xlabel("Delay")
+ax1.set_ylabel("Frequency", color='b')
+ax1.tick_params(axis='y', labelcolor='b')
 
-x = np.linspace(300, 700, 1000)
+# Generate points for the Gaussian curve
+x = np.linspace(400, 600, 1000)
 mean = 500
 std_dev = 50
-y = norm.pdf(x ,mean, std_dev)
+y = norm.pdf(x, mean, std_dev)
 
-plt.plot(x, y, "r-", linewidth=2, label="Gaussian (500, 50)")
+# Plot the Gaussian curve on the second y-axis
+ax2.plot(x, y, 'r-', linewidth=2, label='Gaussian (μ=500, σ=50)')
+ax2.set_ylabel("Probability Density", color='r')
+ax2.tick_params(axis='y', labelcolor='r')
 
-plt.title("Distribution of delay")
-plt.xlabel("Delay")
-plt.ylabel("Density")
+plt.title("Distribution of Delay")
 
-plt.legend()
+# Add legends
+lines1, labels1 = ax1.get_legend_handles_labels()
+lines2, labels2 = ax2.get_legend_handles_labels()
+ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left')
+
 plt.grid(True, alpha=0.3)
-
-plt.ylim(0, max(max(n), max(y)) *1.1)
-
-ax2 = plt.twiny()
-ax2.set_xlim(400, 600)
-ax2.set_label("Theoretical Gaussian")
-
 plt.tight_layout()
 plt.show()
+
+# Print some statistics about the actual data
+print(f"Actual data - Min: {df['Delay'].min()}, Max: {df['Delay'].max()}, Mean: {df['Delay'].mean():.2f}, Std Dev: {df['Delay'].std():.2f}")
