@@ -56,17 +56,13 @@ bool should_drop_packet(uint32_t id) {
 // Apply delay to packet processing, NB: for each single packet.
 double apply_delay_packet() {
     struct timespec delay, start_time, end_time;
-    /* Implementation using a list of predefined values:
-    int list_delay[] = {1, 2, 3, 4, 5};
-    int index_random = rand() % (sizeof(list_delay) / sizeof(list_delay[0]));
-    delay.tv_sec = list_delay[index_random]; */
-
-    delay.tv_sec = 0; // gaussian_distribution(3, 0.5);
-    delay.tv_nsec = gaussian_distribution(500, 50) * pow(10, 6);
+    delay.tv_sec = 0;
+    // Need to convert nanoseconds to milliseconds
+    delay.tv_nsec = gaussian_distribution(400, 25) * pow(10, 6);
     long int milliseconds_delay = delay.tv_nsec / pow (10,6);
 
     // The intended delay
-    printf("Intended delay: %ld seconds and %ld milliseconds\n", delay.tv_sec, milliseconds_delay);
+    // printf("Intended delay: %ld seconds and %ld milliseconds\n", delay.tv_sec, milliseconds_delay);
 
     // Get start time
     if (clock_gettime(CLOCK_MONOTONIC, &start_time) == -1) {
@@ -88,8 +84,7 @@ double apply_delay_packet() {
 
     // Calculate actual delay
     double elapsed = (end_time.tv_sec - start_time.tv_sec) + (end_time.tv_nsec - start_time.tv_nsec) / 1e9;
-
-    printf("Actual delay: %.3f seconds\n", elapsed);
+    // printf("Actual delay: %.3f seconds\n", elapsed);
     return elapsed;
 }
 

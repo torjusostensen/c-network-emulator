@@ -12,7 +12,7 @@ fig, ax1 = plt.subplots(figsize=(12, 6))
 ax2 = ax1.twinx()
 
 # Plot the histogram of actual data on the first y-axis
-n, bins, patches = ax1.hist(df["Delay"], bins=15, edgecolor="k", alpha=0.8, label='Actual Data', color='b')
+n, bins, patches = ax1.hist(df["Delay"], bins=20, edgecolor="k", alpha=0.8, label='Actual Data', color='b')
 ax1.set_xlabel("Delay")
 ax1.set_ylabel("Frequency", color='b')
 ax1.tick_params(axis='y', labelcolor='b')
