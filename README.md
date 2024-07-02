@@ -1,7 +1,7 @@
 ## Network Emulator
 A working implementation of a Network Emulator based on libnetfilter_queue (https://www.netfilter.org/projects/libnetfilter_queue/doxygen/html).
 
-The goal of the implementation is to provide a more flexible approach when it comes to manipulating network traffic over a network compared to established tools such as NetEm and Linux Traffic Control.
+The goal of the implementation is to provide a more flexible approach when it comes to manipulating traffic over a network compared to established tools such as NetEm and Linux Traffic Control.
 
 The implementation allows the user to add latency and packet loss, as well as other metrics in order to simulate how the network performs under changing conditions. The motivation behind the implementation is to run the script on a machine with two network interfaces, acting as a switch for the traffic sent from devices to the network. This is achieved by using NFQUEUE, which places all packets in a queue where latency and other things can be applied. By doing this, we are able to manipulate the stream of packets inbetween the devices on the network.
 
