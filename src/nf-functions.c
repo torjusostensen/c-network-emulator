@@ -62,7 +62,7 @@ double apply_delay_packet() {
     long int milliseconds_delay = delay.tv_nsec / pow (10,6);
 
     // The intended delay
-    // printf("Intended delay: %ld seconds and %ld milliseconds\n", delay.tv_sec, milliseconds_delay);
+    printf("Intended delay: %ld seconds and %ld milliseconds\n", delay.tv_sec, milliseconds_delay);
 
     // Get start time
     if (clock_gettime(CLOCK_MONOTONIC, &start_time) == -1) {
@@ -84,7 +84,7 @@ double apply_delay_packet() {
 
     // Calculate actual delay
     double elapsed = (end_time.tv_sec - start_time.tv_sec) + (end_time.tv_nsec - start_time.tv_nsec) / 1e9;
-    // printf("Actual delay: %.3f seconds\n", elapsed);
+    printf("Actual delay: %.3f seconds\n", elapsed);
     return elapsed;
 }
 
