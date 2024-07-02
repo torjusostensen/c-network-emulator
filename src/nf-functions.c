@@ -58,7 +58,7 @@ double apply_delay_packet() {
     struct timespec delay, start_time, end_time;
     delay.tv_sec = 0;
     // Need to convert nanoseconds to milliseconds
-    delay.tv_nsec = gaussian_distribution(400, 25) * pow(10, 6);
+    delay.tv_nsec = gaussian_distribution(10, 5) * pow(10, 6);
     long int milliseconds_delay = delay.tv_nsec / pow (10,6);
 
     // The intended delay
