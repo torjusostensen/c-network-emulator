@@ -67,17 +67,15 @@ static int queue_cb(const struct nlmsghdr *nlh, void *data) {
 
         // Debug print to check that packet is received.
         printf("Packet received (id=%u hw=0x%04x hook=%u, payload len %u)\n", id, ntohs(ph->hw_protocol), ph->hook, plen);
-
-        printf("Packet: src IP = %s, dst IP = %s, protocol = %u\n", 
-                src_ip, dst_ip, ip_header->protocol);
+        printf("Packet: src IP = %s, dst IP = %s, protocol = %u\n", src_ip, dst_ip, ip_header->protocol);
 
         // Checks if package is UDP, not interested in other packets (twamp uses UDP).
-        if (ip_header->protocol == IPPROTO_UDP) {
+        /* if (ip_header->protocol == IPPROTO_UDP) {
                 uint16_t src_port = ntohs(udp_header->source);
                 uint16_t dst_port = ntohs(udp_header->dest);
 
                 printf("UDP: src port = %u, dst port = %u\n", src_port, dst_port);
-        }
+        } */
 
         // Check if the captured length attribute is present.
         if (attr[NFQA_CAP_LEN]) {
@@ -99,15 +97,16 @@ static int queue_cb(const struct nlmsghdr *nlh, void *data) {
         puts("");
 
         // BEGIN: Manipulation of packet stream
+        double delay = apply_delay_packet();
         int should_drop = should_drop_packet(id);
+
         if (should_drop) {
                 nfq_send_verdict(ntohs(nfg -> res_id), id, NF_DROP);
-                fprintf(fp, "%u, %s, %s, %u, %u, %u, %s, %.3f\n", id, src_ip, dst_ip, ip_header->protocol, ntohs(udp_header->source), ntohs(udp_header->dest), "dropped", apply_delay_packet());
+                fprintf(fp, "%u, %s, %s, %u, %u, %u, %s, %.3f\n", id, src_ip, dst_ip, ip_header->protocol, ntohs(udp_header->source), ntohs(udp_header->dest), "dropped", delay);
                 fflush(fp);
         } else {
-                apply_delay_packet();
                 nfq_send_verdict(ntohs(nfg -> res_id), id, NF_ACCEPT);
-                fprintf(fp, "%u, %s, %s, %u, %u, %u, %s, %.3f\n", id, src_ip, dst_ip, ip_header->protocol, ntohs(udp_header->source), ntohs(udp_header->dest), "accepted", apply_delay_packet());
+                fprintf(fp, "%u, %s, %s, %u, %u, %u, %s, %.3f\n", id, src_ip, dst_ip, ip_header->protocol, ntohs(udp_header->source), ntohs(udp_header->dest), "accepted", delay);
                 fflush(fp);
 
         }

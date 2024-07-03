@@ -50,7 +50,7 @@ bool should_drop_packet(uint32_t id) {
     double mean = 3.0;
     double stddev = 0.5;
     double drop_probability = gaussian_distribution(mean, stddev);
-    return false; //drop_probability > 0.5;
+    return drop_probability > 0.1;
 }
 
 // Apply delay to packet processing, NB: for each single packet.
@@ -58,11 +58,11 @@ double apply_delay_packet() {
     struct timespec delay, start_time, end_time;
     delay.tv_sec = 0;
     // Need to convert nanoseconds to milliseconds
-    delay.tv_nsec = gaussian_distribution(10, 5) * pow(10, 6);
+    delay.tv_nsec = gaussian_distribution(0, 0) * pow(10, 6); // Cannot choose values over 1000ms, will not be added
     long int milliseconds_delay = delay.tv_nsec / pow (10,6);
 
     // The intended delay
-    printf("Intended delay: %ld seconds and %ld milliseconds\n", delay.tv_sec, milliseconds_delay);
+    printf("Intended delay: %ld milliseconds\n", milliseconds_delay);
 
     // Get start time
     if (clock_gettime(CLOCK_MONOTONIC, &start_time) == -1) {
