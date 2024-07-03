@@ -1,4 +1,0 @@
-ToolSet: 1.0 (local)Ninja: 1.12.0@/Users/torjus/Library/Application Support/JetBrains/Toolbox/apps/CLion/ch-0/241.17890.19/CLion.app/Contents/bin/ninja/mac/aarch64/ninja
-Options: 
-
-Options:-DCMAKE_MAKE_PROGRAM=/Users/torjus/Library/Application Support/JetBrains/Toolbox/apps/CLion/ch-0/241.17890.19/CLion.app/Contents/bin/ninja/mac/aarch64/ninja
