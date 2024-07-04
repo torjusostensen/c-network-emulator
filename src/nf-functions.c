@@ -55,13 +55,15 @@ bool should_drop_packet(uint32_t id) {
 
 // Apply delay to packet processing, NB: for each single packet.
 double apply_delay_packet() {
-    
     struct timespec delay, start_time, end_time;
     delay.tv_sec = 0;
-    double delay_in_milliseconds = gaussian_distribution(1000, 200);
+    delay.tv_nsec = 0;
 
-    delay.tv_nsec = (long)(delay_in_milliseconds * 1e6);
+    // Applying distribution in milliseconds, messy to write it as nanoseconds
+    double distribution_milliseconds = gaussian_distribution(50, 5);
+    delay.tv_nsec = (long)(distribution_milliseconds * 1e6);
     
+    // If ms > 1000, then error. Converting to seconds if large enough value.
     if (delay.tv_nsec >= 1e9) {
         delay.tv_sec += delay.tv_nsec / 1e9;
         delay.tv_nsec = delay.tv_nsec & (long) 1e9;

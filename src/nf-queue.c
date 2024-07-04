@@ -24,6 +24,7 @@
 
 static struct mnl_socket *nl;
 static FILE *fp;
+int counter = 0;
 
 // Callback function for processing of each packet.
 static int queue_cb(const struct nlmsghdr *nlh, void *data) {
@@ -32,6 +33,9 @@ static int queue_cb(const struct nlmsghdr *nlh, void *data) {
         uint32_t id = 0, skbinfo;
         struct nfgenmsg *nfg;
         uint16_t plen;
+
+        printf("Counter: %d\n", counter);
+
 
         // Parse the netlink message.
         if (nfq_nlmsg_parse(nlh, attr) < 0) {
@@ -67,7 +71,7 @@ static int queue_cb(const struct nlmsghdr *nlh, void *data) {
 
         // Debug print to check that packet is received.
         printf("Packet received (id=%u hw=0x%04x hook=%u, payload len %u)\n", id, ntohs(ph->hw_protocol), ph->hook, plen);
-        printf("Packet: src IP = %s, dst IP = %s, protocol = %u\n", src_ip, dst_ip, ip_header->protocol);
+        printf("Packet: src IP = %s, dst IP = %s, protocol = %u", src_ip, dst_ip, ip_header->protocol);
 
         // Checks if package is UDP, not interested in other packets (twamp uses UDP).
         /* if (ip_header->protocol == IPPROTO_UDP) {
@@ -97,8 +101,13 @@ static int queue_cb(const struct nlmsghdr *nlh, void *data) {
         puts("");
 
         // BEGIN: Manipulation of packet stream
-        double delay = apply_delay_packet();
+        double delay = 0;
         int should_drop = should_drop_packet(id);
+
+        /*if (counter % 5 == 0) {
+                delay = apply_delay_packet();
+        }*/
+        delay = apply_delay_packet(id);
 
         if (should_drop) {
                 nfq_send_verdict(ntohs(nfg -> res_id), id, NF_DROP);
@@ -111,6 +120,7 @@ static int queue_cb(const struct nlmsghdr *nlh, void *data) {
 
         }
         // END: Manipulation of packet stream
+        counter ++;
         return MNL_CB_OK;
 }
 
