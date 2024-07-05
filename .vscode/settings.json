@@ -5,6 +5,8 @@
         "stdio.h": "c",
         "libnetfilter_queue.h": "c",
         "string.h": "c",
-        "nfnetlink_conntrack.h": "c"
+        "nfnetlink_conntrack.h": "c",
+        "netfilter.h": "c",
+        "libmnl.h": "c"
     }
 }
