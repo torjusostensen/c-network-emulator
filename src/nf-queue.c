@@ -105,15 +105,15 @@ static int queue_cb(const struct nlmsghdr *nlh, void *data) {
         // BEGIN: Manipulation of packet stream
         double delay = 0;
 
-        /*if (genrand_int32() % 10 == 0) {
+        if (genrand_int32() % 100 == 0) {
                 printf("This is the random number: %d\n", genrand_int32());
                 delay = apply_delay_packet();
-        }*/
+        }
 
         
-        if (counter % 10 == 0) {
+        /*if (counter % 10 == 0) {
                 delay = apply_delay_packet();
-        }
+        }*/
         // delay = apply_delay_packet(id);
 
         nfq_send_verdict(ntohs(nfg -> res_id), id, NF_ACCEPT);
@@ -133,7 +133,7 @@ int main(int argc, char *argv[]) {
         struct nlmsghdr *nlh;
         int ret;
         unsigned int portid, queue_num;
-        uint32_t seed = 19692918UL;
+        uint32_t seed = 19682698UL;
         init_genrand(seed);
 
         // Check that main loop is entered and correct number of arguments
