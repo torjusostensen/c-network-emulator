@@ -104,10 +104,10 @@ static int queue_cb(const struct nlmsghdr *nlh, void *data) {
         double delay = 0;
         int should_drop = should_drop_packet(id);
 
-        /*if (counter % 5 == 0) {
+        if (counter % 100 == 0) {
                 delay = apply_delay_packet();
-        }*/
-        delay = apply_delay_packet(id);
+        }
+        // delay = apply_delay_packet(id);
 
         if (should_drop) {
                 nfq_send_verdict(ntohs(nfg -> res_id), id, NF_DROP);

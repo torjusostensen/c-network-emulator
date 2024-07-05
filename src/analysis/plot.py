@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 # Data based on the provided image
 data = {
     "Delay (ms)": [0, 50, 100, 150, 200, 250, 300],
-    "Occurence (%)": [0, 10, 10, 10, 10, 10, 10],
+    "Occurence (%)": [10, 10, 10, 10, 10, 10, 10],
     "Mean (ms)": [90, 151, 242, 299, 371, 439, 540],
     "Stddev (ms)": [5, 25, 70, 91, 104, 130, 163]
 }

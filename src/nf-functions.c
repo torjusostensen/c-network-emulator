@@ -60,7 +60,7 @@ double apply_delay_packet() {
     delay.tv_nsec = 0;
 
     // Applying distribution in milliseconds, messy to write it as nanoseconds
-    double distribution_milliseconds = gaussian_distribution(50, 5);
+    double distribution_milliseconds = 500; //gaussian_distribution(50, 0);
     delay.tv_nsec = (long)(distribution_milliseconds * 1e6);
     
     // If ms > 1000, then error. Converting to seconds if large enough value.
