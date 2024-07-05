@@ -45,14 +45,6 @@ double gaussian_distribution(double mean, double stddev) {
     return mean + stddev * u * s;
 }
 
-// Boolean which returns true if packet should be dropped.
-bool should_drop_packet(uint32_t id) {
-    double mean = 3.0;
-    double stddev = 0.5;
-    double drop_probability = gaussian_distribution(mean, stddev);
-    return false; // drop_probability > 0.1;
-}
-
 // Apply delay to packet processing, NB: for each single packet.
 double apply_delay_packet() {
     struct timespec delay, start_time, end_time;
@@ -60,7 +52,7 @@ double apply_delay_packet() {
     delay.tv_nsec = 0;
 
     // Applying distribution in milliseconds, messy to write it as nanoseconds
-    double distribution_milliseconds = 500; //gaussian_distribution(50, 0);
+    double distribution_milliseconds = 250; //gaussian_distribution(50, 0);
     delay.tv_nsec = (long)(distribution_milliseconds * 1e6);
     
     // If ms > 1000, then error. Converting to seconds if large enough value.
@@ -94,6 +86,7 @@ double apply_delay_packet() {
     // Calculate actual delay
     double elapsed = (end_time.tv_sec - start_time.tv_sec) + (end_time.tv_nsec - start_time.tv_nsec) / 1e9;
     printf("Actual delay: %.3f seconds\n", elapsed);
+    printf("\n");
     return elapsed;
 }
 

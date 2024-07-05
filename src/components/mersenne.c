@@ -61,18 +61,3 @@ uint32_t genrand_int32(void)
 
     return y;
 }
-
-int main(void)
-{
-    // Define a seed value
-    uint32_t seed = 18UL;
-
-    // Initialize generator with the seed
-    init_genrand(seed);
-
-    // Print 10 different numbers
-    for (int i = 0; i < 10; i++) {
-        printf("Random number %d: %u\n", i + 1, genrand_int32());
-    }
-    return 0;
-}

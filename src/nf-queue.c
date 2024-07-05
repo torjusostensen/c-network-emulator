@@ -20,7 +20,9 @@
 
 /* only for NFQA_CT, not needed otherwise: */
 #include <linux/netfilter/nfnetlink_conntrack.h>
-#include "nf-functions.c"
+
+#include "components/packet-manipulation.c"
+#include "components/mersenne.c"
 
 static struct mnl_socket *nl;
 static FILE *fp;
@@ -102,23 +104,22 @@ static int queue_cb(const struct nlmsghdr *nlh, void *data) {
 
         // BEGIN: Manipulation of packet stream
         double delay = 0;
-        int should_drop = should_drop_packet(id);
 
-        if (counter % 100 == 0) {
+        /*if (genrand_int32() % 10 == 0) {
+                printf("This is the random number: %d\n", genrand_int32());
+                delay = apply_delay_packet();
+        }*/
+
+        
+        if (counter % 10 == 0) {
                 delay = apply_delay_packet();
         }
         // delay = apply_delay_packet(id);
 
-        if (should_drop) {
-                nfq_send_verdict(ntohs(nfg -> res_id), id, NF_DROP);
-                fprintf(fp, "%u, %s, %s, %u, %u, %u, %s, %.3f\n", id, src_ip, dst_ip, ip_header->protocol, ntohs(udp_header->source), ntohs(udp_header->dest), "dropped", delay);
-                fflush(fp);
-        } else {
-                nfq_send_verdict(ntohs(nfg -> res_id), id, NF_ACCEPT);
-                fprintf(fp, "%u, %s, %s, %u, %u, %u, %s, %.3f\n", id, src_ip, dst_ip, ip_header->protocol, ntohs(udp_header->source), ntohs(udp_header->dest), "accepted", delay);
-                fflush(fp);
+        nfq_send_verdict(ntohs(nfg -> res_id), id, NF_ACCEPT);
+        fprintf(fp, "%u, %s, %s, %u, %u, %u, %s, %.3f\n", id, src_ip, dst_ip, ip_header->protocol, ntohs(udp_header->source), ntohs(udp_header->dest), "accepted", delay);
+        fflush(fp);
 
-        }
         // END: Manipulation of packet stream
         counter ++;
         return MNL_CB_OK;
@@ -132,6 +133,8 @@ int main(int argc, char *argv[]) {
         struct nlmsghdr *nlh;
         int ret;
         unsigned int portid, queue_num;
+        uint32_t seed = 19692918UL;
+        init_genrand(seed);
 
         // Check that main loop is entered and correct number of arguments
         printf("Main loop entered: \n");
