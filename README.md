@@ -5,6 +5,8 @@ The goal of the implementation is to provide a more flexible approach when it co
 
 The implementation allows the user to add latency and packet loss, as well as other metrics in order to simulate how the network performs under changing conditions. The motivation behind the implementation is to run the script on a machine with two network interfaces, acting as a switch for the traffic sent from devices to the network. This is achieved by using NFQUEUE, which places all packets in a queue where latency and other things can be applied. By doing this, we are able to manipulate the stream of packets inbetween the devices on the network.
 
+To achieve random behaviour, a version of the psuedo-random number generator Mersenne Twister (https://dl.acm.org/doi/pdf/10.1145/272991.272995) has been added.
+
 ## Setup
 The implementation requires a Linux device, as libnetfilter_queue is not supported on other devices. Furthermore, we need to configure iptables rules on the forwarding machine. The following ruleset is applied:
 - sudo iptables -A FORWARD -p udp —sport 4200 -j NFQUEUE —queue-num 0
